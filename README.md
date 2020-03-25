@@ -20,7 +20,7 @@
     <img src="https://img.zuoyebang.cc/logo.jpg" alt="Logo" width="300" height="300">
   </a>
   <p align="center">
-    数字货币量化交易,让机器来进行高频买卖,减少人为情绪影响！
+    让机器来进行高频买卖,减少人为情绪影响！
     <br />
     <a href="https://github.com/threadshare/turtle_trading_fmz"><strong>探索本项目的文档 »</strong></a>
     <br />
