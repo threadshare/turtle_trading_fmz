@@ -17,7 +17,7 @@ ProjectName and Description
 
 <p align="center">
   <a href="https://github.com/threadshare/turtle_trading_fmz/">
-    <img src="https://img.zuoyebang.cc/logo.jpg" alt="Logo" width="80" height="80">
+    <img src="https://img.zuoyebang.cc/logo.jpg" alt="Logo" width="300" height="300">
   </a>
 
   <h3 align="center">野火量化</h3>
