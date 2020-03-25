@@ -1,6 +1,6 @@
 
 
-# ProjectName
+# turtle_trading_fmz
 
 ProjectName and Description
 
@@ -19,8 +19,6 @@ ProjectName and Description
   <a href="https://github.com/threadshare/turtle_trading_fmz/">
     <img src="https://img.zuoyebang.cc/logo.jpg" alt="Logo" width="300" height="300">
   </a>
-
-  <h3 align="center">野火量化</h3>
   <p align="center">
     数字货币量化交易,让机器来进行高频买卖,减少人为情绪影响！
     <br />
