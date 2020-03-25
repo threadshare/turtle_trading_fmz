@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="https://github.com/threadshare/turtle_trading_fmz/">
-    <img src="https://img.zuoyebang.cc/logo.jpg" alt="Logo" width="120" height="120">
+    <img src="./img/logo-quant.jpg" alt="Logo" width="120" height="120">
   </a>
   <p align="center">
     让机器来进行高频买卖,减少人为情绪影响！
@@ -78,6 +78,8 @@ filetree
 ├── ARCHITECTURE.md
 ├── LICENSE.txt
 ├── README.md
+├── /img/
+│  ├── logo-quant.jpg
 ├── /docs/
 │  ├── /rules/
 │  │  ├── backend.txt
