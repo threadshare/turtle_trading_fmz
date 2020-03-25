@@ -2,7 +2,7 @@
 
 # turtle_trading_fmz
 
-ProjectName and Description
+基于发明者数字量化平台,研发可盈利,低风险,高频率的量化策略.
 
 <!-- PROJECT SHIELDS -->
 
@@ -34,8 +34,6 @@ ProjectName and Description
 
 </p>
 
-
- 本篇README.md面向开发者
  
 ## 目录
 
