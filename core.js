@@ -1,36 +1,49 @@
 /**
-海龟策略
-用途：分散风险,平抑波动
-17:34 2018/9/12  retrySell后加sleep，解决清仓余额不足的问题
-17:58 2018/9/12  fixed Sell(-1, 0.00033): Less than minimum requirement
-8:58 2018/9/13 fixed 无限仓位问题
-11:12 2018/9/13 符合海龟交易法则
-20:23 2018/9/23 修改清仓时不更新account.stock的问题
-11:14 2018/10/18 retrysell函数支持 对最小数量的自动修正
-11:16 2018/10/19 支持utc+8时间和logprofit
-15:13 2018/10/19 支持对象化和管理多个交易对
-23:28 2018/10/20 支持统计手续费损失
-9:05 2018/10/22 retryBuy支持自动修正买入量
-22:10 2018/12/22 支持统计市价单盈亏
-11:40 2019/04/25 支持收益曲线连续
-*/
+ 海龟策略
+ 用途：分散风险,平抑波动
+ 17:34 2018/9/12  retrySell后加sleep，解决清仓余额不足的问题
+ 17:58 2018/9/12  fixed Sell(-1, 0.00033): Less than minimum requirement
+ 8:58 2018/9/13 fixed 无限仓位问题
+ 11:12 2018/9/13 符合海龟交易法则
+ 20:23 2018/9/23 修改清仓时不更新account.stock的问题
+ 11:14 2018/10/18 retrysell函数支持 对最小数量的自动修正
+ 11:16 2018/10/19 支持utc+8时间和logprofit
+ 15:13 2018/10/19 支持对象化和管理多个交易对
+ 23:28 2018/10/20 支持统计手续费损失
+ 9:05 2018/10/22 retryBuy支持自动修正买入量
+ 22:10 2018/12/22 支持统计市价单盈亏
+ 11:40 2019/04/25 支持收益曲线连续
+ */
 
 /**
-参数说明
-* manage_assets 策略可管理的币数，比如你想让策略操作 1 个 BTC，这里可以设置为 1
-* max_positions 策略在单次趋势中最多加仓次数
-* price_n 价格精度
-* num_n 数量精度
-* minest_buy 最小买入量
-* minest_sell 最小卖出量
-* order_wait_secs 订单的最长等待时间   (单位：毫秒)
-* wait_ms 默认等待时间
-* sxf 单次交易的手续费消耗
+ 参数说明
+ * manage_assets 策略可管理的币数，比如你想让策略操作 1 个 BTC，这里可以设置为 1
+ * max_positions 策略在单次趋势中最多加仓次数
+ * minest_sell 最小卖出量
+ * OrderWaitMS 订单的最长等待时间   (单位：毫秒)
+ * wait_ms 默认等待时间
+ * sxf 单次交易的手续费消耗
  *
-使用说明
-1. 此策略基于 发明者平台 实现，在使用之前需要有一个 发明者 账户
-2. 上传策略并创建机器人
-3. 配置参数并运行策略
+ 使用说明
+ 1. 此策略基于 发明者平台 实现，在使用之前需要有一个 发明者 账户
+ 2. 上传策略并创建机器人
+ 3. 配置参数并运行策略
+ */
+/**
+ * todo
+ * 1.最大风险值
+ * 2.最大盈亏比
+ * 3.优化交易手续费 通过接口去获取
+ * 4.
+ */
+/**
+ *      1. ResetData bool robot 重启是否清除所有日志
+ *      2. PricePrecision number 下单价格小数点精度
+ *      3. AmountPrecision number 下单数量小数精度
+ *      4. MinBuyStock number 下单最小买入量
+ *      5. MinSellStock number 下单最小卖出量
+ *      6. OrderWaitMS number 订单最长等待时间(ms) 推荐: 120000
+ *      7. WaitMS number 等待时长(ms) 推荐默认: 1000
  */
 
 /**
@@ -42,28 +55,6 @@ var ExchangProcessor = {
         //策略参数
         var manage_assets = 1;//bch
         var max_positions = 4;//max=4N
-        var price_n = {BTC_BCH: 8, ETH_BCH: 8, XRP_BCH: 8, EOS_BCH: 8, LTC_BCH: 8, DASH_BCH: 8, CET_BCH: 8}; //价格精度
-        var num_n = {BTC_BCH: 8, ETH_BCH: 8, XRP_BCH: 8, EOS_BCH: 8, LTC_BCH: 8, DASH_BCH: 8, CET_BCH: 8}; //数量精度
-        var minest_buy = {
-            BTC_BCH: 0.001,
-            ETH_BCH: 0.01,
-            XRP_BCH: 1,
-            EOS_BCH: 1,
-            LTC_BCH: 0.1,
-            DASH_BCH: 0.01,
-            CET_BCH: 1
-        };//最小买入量
-        var minest_sell = {
-            BTC_BCH: 0.001,
-            ETH_BCH: 0.01,
-            XRP_BCH: 1,
-            EOS_BCH: 1,
-            LTC_BCH: 0.1,
-            DASH_BCH: 0.01,
-            CET_BCH: 1
-        };//最小卖出量
-        var order_wait_secs = 120000; //订单的最长等待时间 毫秒
-        var wait_ms = 1000;//默认等待毫秒
         var sxf = 0.0005;//用来计算手续费消耗
 
 
@@ -80,15 +71,19 @@ var ExchangProcessor = {
         //重试购买，直到成功返回
         processor.retryBuy = function (ex, price, num) {
             var currency = ex.GetCurrency();
-            var r = ex.Buy(_N(price, price_n[currency]), _N(num, num_n[currency]));
+            var r = ex.Buy(_N(price, PricePrecision), _N(num, AmountPrecision));
             while (!r) {
                 Log("Buy失败，正在retry。");
-                Sleep(wait_ms);
+                Sleep(WaitMS);
                 var account = _C(ex.GetAccount);
                 var ticker = _C(ex.GetTicker);
                 var last = ticker.Last;
+                //确保可购买数量 在一个合理的范围, 也确保价格入参正常
+                if (price === -1) {
+                    Log("重试购买价格(-1)异常,请及时关注. #ff0000@")
+                }
                 var fixedAmount = (price === -1 ? Math.min(account.Balance * 0.95, num) : Math.min(account.Balance / last * 0.95, num));
-                r = ex.Buy(_N(price, price_n[currency]), _N(fixedAmount, num_n[currency]));
+                r = ex.Buy(_N(price, PricePrecision), _N(fixedAmount, AmountPrecision));
             }
             return r;
         }
@@ -96,13 +91,13 @@ var ExchangProcessor = {
         //重试卖出，直到成功返回
         processor.retrySell = function (ex, price, num) {
             var currency = ex.GetCurrency();
-            var r = ex.Sell(_N(price, price_n[currency]), _N(num, num_n[currency]));
+            var r = ex.Sell(_N(price, PricePrecision), _N(num, AmountPrecision));
             while (!r) {
                 Log("Sell失败，正在retry。");
-                Sleep(wait_ms);
+                Sleep(WaitMS);
                 var account = _C(ex.GetAccount);
                 var fixedAmount = Math.min(account.Stocks, num);
-                r = ex.Sell(_N(price, price_n[currency]), _N(fixedAmount, num_n[currency]));
+                r = ex.Sell(_N(price, PricePrecision), _N(fixedAmount, AmountPrecision));
             }
             return r;
         }
@@ -119,7 +114,7 @@ var ExchangProcessor = {
         }
 
         processor.init_obj = function () {
-            _CDelay(wait_ms);
+            _CDelay(WaitMS);
             pre_time = new Date();
 
             //init
@@ -128,7 +123,7 @@ var ExchangProcessor = {
                 var ticker = _C(exc_obj.GetTicker);
                 var last = ticker.Last;
                 init_asset = (account.Balance + account.FrozenBalance) + (account.Stocks + account.FrozenStocks) * last;
-                Sleep(wait_ms);
+                Sleep(WaitMS);
             }
         }
 
@@ -151,13 +146,13 @@ var ExchangProcessor = {
             var records = _C(exc_obj.GetRecords);
             if (records.length <= 50) {
                 Log("records.length is not valid.");
-                Sleep(wait_ms);
+                Sleep(WaitMS);
                 return;
             }
             var atr = TA.ATR(records, 20);
             if (atr.length <= 1) {
                 Log("atr.length is not valid.");
-                Sleep(wait_ms);
+                Sleep(WaitMS);
                 return;
             }
             var N = atr[atr.length - 1];
@@ -170,7 +165,7 @@ var ExchangProcessor = {
             var rsi12 = TA.RSI(records, 12);
             if (rsi6.length <= 5 || rsi12.length <= 5) {
                 Log("rsi is not valid.");
-                Sleep(wait_ms);
+                Sleep(WaitMS);
                 return;
             }
             var rsi_in = false;
@@ -189,10 +184,10 @@ var ExchangProcessor = {
             }
 
             //建仓
-            if (positions.length == 0 && position_unit > minest_buy[currency]) {
+            if (positions.length == 0 && position_unit > MinBuyStock) {
                 if (last >= highest) {
                     var buyID = processor.retryBuy(exc_obj, last, position_unit);
-                    Sleep(order_wait_secs);
+                    Sleep(OrderWaitMS);
                     var buyOrder = _C(exc_obj.GetOrder, buyID);
                     if (buyOrder.Status != ORDER_STATE_CLOSED) {
                         exc_obj.CancelOrder(buyID);
@@ -224,12 +219,12 @@ var ExchangProcessor = {
             }
 
             //加仓
-            if (positions.length > 0 && position_unit > minest_buy[currency]) {
+            if (positions.length > 0 && position_unit > MinBuyStock) {
                 var last_buy_price = positions[positions.length - 1].buy_price;
                 if (add_already < max_positions) {//max = 4N
                     if (last - last_buy_price >= 0.5 * N) {
                         var buyID = processor.retryBuy(exc_obj, last, position_unit);
-                        Sleep(order_wait_secs);
+                        Sleep(OrderWaitMS);
                         var buyOrder = _C(exc_obj.GetOrder, buyID);
                         if (buyOrder.Status != ORDER_STATE_CLOSED) {
                             exc_obj.CancelOrder(buyID);
@@ -268,17 +263,17 @@ var ExchangProcessor = {
                     if (last <= positions[i].stoploss_price) {
                         account = _C(exc_obj.GetAccount);
                         var fixedAmount = Math.min(account.Stocks, positions[i].amount);
-                        if (fixedAmount > minest_sell[currency]) {
+                        if (fixedAmount > MinSellStock) {
                             var sellID = processor.retrySell(exc_obj, last, fixedAmount);
-                            Sleep(order_wait_secs);
+                            Sleep(OrderWaitMS);
                             var sellOrder = _C(exc_obj.GetOrder, sellID);
                             approximate_profit += (sellOrder.AvgPrice * sellOrder.DealAmount * (1 - sxf) - positions[i].buy_price * sellOrder.DealAmount * (1 + sxf));
                             Log("定价卖出: 数量-" + sellOrder.DealAmount + ",approximate_profit=" + approximate_profit);
                             if (sellOrder.Status != ORDER_STATE_CLOSED) {
                                 exc_obj.CancelOrder(sellID);
-                                if (Math.min(account.Stocks, fixedAmount - sellOrder.DealAmount) > minest_sell[currency]) {
+                                if (Math.min(account.Stocks, fixedAmount - sellOrder.DealAmount) > MinSellStock) {
                                     var marketsellOrderID = processor.retrySell(exc_obj, -1, fixedAmount - sellOrder.DealAmount);
-                                    Sleep(order_wait_secs);
+                                    Sleep(OrderWaitMS);
                                     var marketsellOrderData = _C(exc_obj.GetOrder, marketsellOrderID);
                                     approximate_profit += (marketsellOrderData.AvgPrice * marketsellOrderData.DealAmount * (1 - sxf) - positions[i].buy_price * marketsellOrderData.DealAmount * (1 + sxf));
                                     Log("市价卖出: 数量-" + marketsellOrderData.DealAmount + ",approximate_profit=" + approximate_profit);
@@ -312,17 +307,17 @@ var ExchangProcessor = {
                     for (var i = 0; i < positions.length; i++) {
                         account = _C(exc_obj.GetAccount);
                         var fixedAmount = Math.min(account.Stocks, positions[i].amount);
-                        if (fixedAmount > minest_sell[currency]) {
+                        if (fixedAmount > MinSellStock) {
                             var sellID = processor.retrySell(exc_obj, last, fixedAmount);
-                            Sleep(order_wait_secs);
+                            Sleep(OrderWaitMS);
                             var sellOrder = _C(exc_obj.GetOrder, sellID);
                             approximate_profit += (sellOrder.AvgPrice * sellOrder.DealAmount * (1 - sxf) - positions[i].buy_price * sellOrder.DealAmount * (1 + sxf));
                             Log("定价卖出: 数量-" + sellOrder.DealAmount + ",approximate_profit=" + approximate_profit);
                             if (sellOrder.Status != ORDER_STATE_CLOSED) {
                                 exc_obj.CancelOrder(sellID);
-                                if (Math.min(account.Stocks, fixedAmount - sellOrder.DealAmount) > minest_sell[currency]) {
+                                if (Math.min(account.Stocks, fixedAmount - sellOrder.DealAmount) > MinSellStock) {
                                     var marketsellOrderID = processor.retrySell(exc_obj, -1, fixedAmount - sellOrder.DealAmount);
-                                    Sleep(order_wait_secs);
+                                    Sleep(OrderWaitMS);
                                     var marketsellOrderData = _C(exc_obj.GetOrder, marketsellOrderID);
                                     approximate_profit += (marketsellOrderData.AvgPrice * marketsellOrderData.DealAmount * (1 - sxf) - positions[i].buy_price * marketsellOrderData.DealAmount * (1 + sxf));
                                     Log("市价卖出: 数量-" + marketsellOrderData.DealAmount + ",approximate_profit=" + approximate_profit);
@@ -380,7 +375,7 @@ var ExchangProcessor = {
             processor.logprofit = approximate_profit;
 
             //rest
-            Sleep(wait_ms);
+            Sleep(WaitMS);
         }
 
         return processor;
@@ -388,8 +383,24 @@ var ExchangProcessor = {
 };
 
 
-//主函数
+/**
+ * 主函数
+ * 界面策略参数:
+ *      1. ResetData bool robot 重启是否清除所有日志
+ *      2. PricePrecision number 下单价格小数点精度
+ *      3. AmountPrecision number 下单数量小数精度
+ *      4. MinBuyStock number 下单最小买入量
+ *      5. MinSellStock number 下单最小卖出量
+ *      6. OrderWaitMS number 订单最长等待时间(ms) 推荐: 120000
+ *      7. WaitMS number 等待时长(ms) 推荐默认: 1000
+ */
 function main() {
+    //启动是是否清除所有日志
+    if (ResetData) {
+        LogProfitReset();
+        LogReset();
+    }
+
     var exchange_num = exchanges.length;
     var processors = [];
     for (var i = 0; i < exchange_num; ++i) {
@@ -402,6 +413,7 @@ function main() {
     var pre_profit = Number(_G("pre_profit"));
     Log('之前收入累计：' + pre_profit);
     var lastprofit = 0;
+
     while (true) {
         var allstatus = '策略仅作为学习使用，实盘风险自担。#0000ff' + '\n';
         var allprofit = 0;
@@ -410,6 +422,7 @@ function main() {
             allstatus += processors[i].logstatus;
             allprofit += processors[i].logprofit;
         }
+
         allstatus += ('邮件：master@io404.net' + '\n');
         LogStatus(allstatus);
         if (lastprofit !== allprofit) {
